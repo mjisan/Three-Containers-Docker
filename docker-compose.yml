@@ -1,0 +1,82 @@
+#FROM mjisan@g.coastal.edu
+#Three containers were used to run the test case for Hurricane Irma using cloud resources from Google Compute# Engine.This is a good example of openmpi over ssh for# conainers.
+#Any question should be directed to jisan.mansur@gmail.com/mjisan@coastal.edu
+#
+#  in this pwd/
+#  docker-compose up 
+#  when seeing, "wrfleader exited with code 0"  press Ctrl-C
+#  docker-compose stop
+#  docker-compose rm
+#
+wrfvol: 
+  image: metoceanhydro/wrf
+  command:
+   - /bin/true
+#
+wpsgeog: 
+  image: metoceanhydro/wpsgeodata
+wrfinput: 
+  image: metoceanhydro/irma
+#
+wrfsandy-leader: 
+  command: 
+    - /wrf/run-wrf
+    - "-np"
+    - "6"
+    - "-slots"
+    - "3"
+    - "-iface"
+    - "eth0"
+    - "-hosts"
+    - "irmaslave-1,irmaslave-2,irmaslave-3"
+  container_name: wrfleader
+  links: 
+    - irma-slave-1
+    - irma-slave-2
+    - irma-slave-3
+  image: metoceanhydro/wrf
+  volumes: 
+    - "~/wrfoutput:/wrfoutput"
+  volumes_from: 
+    - wpsgeog
+    - wrfinput
+    - wrfvol
+#
+irma-slave-1: 
+  command: 
+    - /usr/sbin/sshd
+    - "-D"
+  container_name: irmaslave-1
+  image: metoceanhydro/wrf
+  volumes: 
+    - "~/wrfoutput:/wrfoutput"
+  volumes_from: 
+    - wpsgeog
+    - wrfinput
+    - wrfvol
+#
+irma-slave-2: 
+  command: 
+    - /usr/sbin/sshd
+    - "-D"
+  container_name: irmaslave-2
+  image: metoceanhydro/wrf
+  volumes: 
+    - "~/wrfoutput:/wrfoutput"
+  volumes_from: 
+    - wpsgeog
+    - wrfinput
+    - wrfvol
+#
+irma-slave-3:
+  command:
+    - /usr/sbin/sshd
+    - "-D"
+  container_name: irmaslave-3
+  image: metoceanhydro/wrf
+  volumes:
+    - "~/wrfoutput:/wrfoutput"
+  volumes_from:
+    - wpsgeog
+    - wrfinput
+    - wrfvol
